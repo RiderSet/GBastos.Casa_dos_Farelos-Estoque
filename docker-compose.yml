@@ -1,0 +1,42 @@
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "Gbsft@7K10"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  casa_dos_farelos:
+    build:
+      context: ./GBastos.Casa_dos_Farelos.Api
+    container_name: casa_dos_farelos
+    depends_on:
+      - sqlserver
+      - redis
+    environment:
+      ConnectionStrings__SqlServer: "Server=sqlserver;Database=CasaDosFarelos;User Id=sa;Password=Gbsft@7K10;TrustServerCertificate=True"
+      Redis__Connection: "redis:6379"
+    ports:
+      - "5001:80"
+
+  estoque_service:
+    build:
+      context: ./GBastos.Casa_dos_Farelos_Estoque.Api
+    container_name: estoque_service
+    depends_on:
+      - sqlserver
+      - redis
+    environment:
+      ConnectionStrings__SqlServer: "Server=sqlserver;Database=EstoqueDb;User Id=sa;Password=Gbsft@7K10;TrustServerCertificate=True"
+      Redis__Connection: "redis:6379"
+    ports:
+      - "5002:80"
