@@ -1,4 +1,4 @@
-using GBastos.Casa_dos_farelos_Estoque.Api.Application.Handlers;
+﻿using GBastos.Casa_dos_farelos_Estoque.Api.Application.Handlers;
 using GBastos.Casa_dos_farelos_Estoque.Api.Endpoints;
 using GBastos.Casa_dos_farelos_Estoque.Api.Endpoints.V1;
 using GBastos.Casa_dos_farelos_Estoque.Api.Infrastructure.Messaging;
@@ -13,8 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<EstoqueDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
+//builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+//    ConnectionMultiplexer.Connect(builder.Configuration["Redis:Connection"]!));
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-    ConnectionMultiplexer.Connect(builder.Configuration["Redis:Connection"]!));
+    ConnectionMultiplexer.Connect(new ConfigurationOptions
+    {
+        EndPoints = { "172.25.176.1:6379" }, // Use localhost ou 127.0.0.1
+        AbortOnConnectFail = false,       // 🔹 Permite continuar tentando
+        ConnectRetry = 5,                 // 🔹 Retry interno
+        ConnectTimeout = 10000             // 🔹 Timeout maior
+    }));
 
 builder.Services.AddScoped<VendaCriadaHandler>();
 builder.Services.AddHostedService<VendaCriadaConsumer>();
